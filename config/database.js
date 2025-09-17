@@ -3,7 +3,7 @@ require("dotenv").config();
 
 // Main connection pool with database
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
+  host: process.env.DB_HOST || "127.0.0.1", // Use IPv4 instead of IPv6
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "", // Add password parameter
   database: process.env.DB_NAME || "feedback_system",
@@ -17,15 +17,19 @@ const initializeDatabase = async () => {
   try {
     // Create a separate connection to handle database creation
     const initConnection = mysql.createConnection({
-      host: process.env.DB_HOST || "localhost",
+      host: process.env.DB_HOST || "127.0.0.1", // Use IPv4 instead of IPv6
       user: process.env.DB_USER || "root",
       password: process.env.DB_PASSWORD || "",
     });
 
     // Create the database if it doesn't exist
-    await initConnection.promise().execute(
-      `CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME || "feedback_system"}`
-    );
+    await initConnection
+      .promise()
+      .execute(
+        `CREATE DATABASE IF NOT EXISTS ${
+          process.env.DB_NAME || "feedback_system"
+        }`
+      );
 
     console.log("Database created or already exists");
     initConnection.end();

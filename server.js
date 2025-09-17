@@ -123,15 +123,29 @@ db.getConnection((err, connection) => {
 });
 
 // Add global error handler
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
   // Don't exit the process, let PM2 handle restarts
 });
 
 // Add promise rejection handler
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
   // Don't exit the process, let PM2 handle restarts
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Server error:", err.stack);
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
+});
+
+// Route not found handling
+app.use((req, res) => {
+  res.status(404).json({ error: "Endpoint not found" });
 });
 
 const PORT = process.env.PORT || 3001;
