@@ -10,7 +10,7 @@ const db = require("./config/database");
 const app = express();
 const server = http.createServer(app);
 
-// Update with your actual Vercel URLs after deployment
+// CORS configuration with proper headers for Vercel
 const allowedOrigins = [
   // Local development origins
   "http://localhost:3000",
@@ -18,7 +18,9 @@ const allowedOrigins = [
   "http://localhost:3003",
   "http://192.168.1.9:3000",
   "http://192.168.1.9:3002",
-  // Your actual Vercel deployment URLs (update these)
+  // Production Vercel origins
+  "https://feedback-tablet-app.vercel.app",
+  "https://feedback-walldisplay.vercel.app",
   "https://feedback-tablet.vercel.app",
   "https://feedback-walldisplay.vercel.app",
 ];
@@ -26,39 +28,35 @@ const allowedOrigins = [
 // Socket.IO configuration
 const io = socketIo(server, {
   cors: {
-    origin: [
-      // Local development origins
-      "http://localhost:3000",
-      "http://localhost:3002",
-      "http://localhost:3003",
-      "http://192.168.1.9:3000",
-      "http://192.168.1.9:3002",
-      // Your actual Vercel deployment URLs
-      "https://feedback-tablet.vercel.app",
-      "https://feedback-walldisplay.vercel.app",
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
-// Middleware
+// Apply CORS middleware properly
 app.use(
   cors({
-    origin: [
-      // Local development origins
-      "http://localhost:3000",
-      "http://localhost:3002",
-      "http://localhost:3003",
-      "http://192.168.1.9:3000",
-      "http://192.168.1.9:3002",
-      // Your actual Vercel deployment URLs
-      "https://feedback-tablet.vercel.app",
-      "https://feedback-walldisplay.vercel.app",
-    ],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg =
+          "The CORS policy for this site does not allow access from the specified origin.";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// Add CORS preflight handler for OPTIONS requests
+app.options("*", cors());
+
 app.use(express.json());
 
 // Routes
