@@ -5,12 +5,37 @@ const db = require("../config/database");
 // POST /api/feedback - Create new feedback
 router.post("/feedback", async (req, res) => {
   try {
-    const { name, email, feedback, colorTheme } = req.body;
+    console.log("Received feedback submission:", req.body);
 
-    // Validation
+    // Extract data, handling both direct JSON and FormData approaches
+    let name, email, feedback, colorTheme;
+
+    if (req.body.data && typeof req.body.data === "string") {
+      // Handle FormData format
+      try {
+        const parsedData = JSON.parse(req.body.data);
+        name = parsedData.name;
+        email = parsedData.email;
+        feedback = parsedData.feedback;
+        colorTheme = parsedData.colorTheme;
+      } catch (parseError) {
+        console.error("Error parsing JSON from FormData:", parseError);
+        return res.status(400).json({ error: "Invalid JSON in form data" });
+      }
+    } else {
+      // Handle direct JSON format
+      name = req.body.name;
+      email = req.body.email;
+      feedback = req.body.feedback;
+      colorTheme = req.body.colorTheme;
+    }
+
+    // Add validation
     if (!name || !email || !feedback) {
+      console.error("Missing required fields:", { name, email, feedback });
       return res.status(400).json({
-        error: "Name, email, and feedback are required",
+        error: "Name, email and feedback are required",
+        received: { name, email, feedback, colorTheme },
       });
     }
 
