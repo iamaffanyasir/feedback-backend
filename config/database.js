@@ -4,8 +4,8 @@ require("dotenv").config();
 // Main connection pool with database
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "127.0.0.1", // Use IPv4 instead of IPv6
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "", // Add password parameter
+  user: process.env.DB_USER || "feedback_user",
+  password: process.env.DB_PASSWORD || "Feedback@123", // Add password parameter
   database: process.env.DB_NAME || "feedback_system",
   waitForConnections: true,
   connectionLimit: 10,
