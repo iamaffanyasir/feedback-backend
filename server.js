@@ -5,12 +5,13 @@ const cors = require("cors");
 require("dotenv").config();
 
 const feedbackRoutes = require("./routes/feedback");
+const adminRoutes = require("./routes/admin"); // Add this line
 const db = require("./config/database");
 
 const app = express();
 const server = http.createServer(app);
 
-// CORS configuration with proper headers for Vercel
+// CORS configuration with proper headers for all devices
 const allowedOrigins = [
   // Local development origins
   "http://localhost:3000",
@@ -34,21 +35,11 @@ const io = socketIo(server, {
   },
 });
 
-// Apply CORS middleware properly
+// Apply CORS middleware - simplify to allow all origins for testing
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg =
-          "The CORS policy for this site does not allow access from the specified origin.";
-        return callback(new Error(msg), false);
-      }
-      return callback(null, true);
-    },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: "*", // Allow all origins temporarily to test mobile devices
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -61,6 +52,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api", feedbackRoutes);
+app.use("/api/admin", adminRoutes); // Add this line
 
 // Track recent feedback to prevent duplicates
 const recentFeedbacks = new Map();
@@ -142,6 +134,16 @@ app.use((err, req, res, next) => {
 });
 
 // Route not found handling
+app.use((req, res) => {
+  res.status(404).json({ error: "Endpoint not found" });
+});
+
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+module.exports = { app, io };
 app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
