@@ -111,14 +111,27 @@ io.on("connection", (socket) => {
   });
 });
 
-// Test database connection on startup
+// Improve error handling for database connection
 db.getConnection((err, connection) => {
   if (err) {
     console.error("Database connection failed:", err);
+    // Don't exit the process, just log the error
   } else {
     console.log("Database connected successfully");
     connection.release();
   }
+});
+
+// Add global error handler
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Don't exit the process, let PM2 handle restarts
+});
+
+// Add promise rejection handler
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit the process, let PM2 handle restarts
 });
 
 const PORT = process.env.PORT || 3001;
