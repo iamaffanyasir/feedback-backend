@@ -1,31 +1,36 @@
-const mysql = require('mysql2');
-require('dotenv').config();
+const mysql = require("mysql2");
+require("dotenv").config();
 
 // First connection without database to create it
 const createDbConnection = mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root'
-  // No password and no database specified
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "", // Add password parameter
+  // No database specified
 });
 
 // Create database if it doesn't exist
-createDbConnection.execute(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME || 'feedback_system'}`, (err) => {
-  if (err) {
-    console.error('Error creating database:', err);
-  } else {
-    console.log('Database created or already exists');
+createDbConnection.execute(
+  `CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME || "feedback_system"}`,
+  (err) => {
+    if (err) {
+      console.error("Error creating database:", err);
+    } else {
+      console.log("Database created or already exists");
+    }
+    createDbConnection.end();
   }
-  createDbConnection.end();
-});
+);
 
 // Main connection pool with database
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  database: process.env.DB_NAME || 'feedback_system',
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "", // Add password parameter
+  database: process.env.DB_NAME || "feedback_system",
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
 
 // Create tables and indexes separately
@@ -46,20 +51,20 @@ const createIndex2 = `CREATE INDEX IF NOT EXISTS idx_color_theme ON feedbacks(co
 // Execute table creation
 pool.execute(createTable, (err) => {
   if (err) {
-    console.error('Error creating table:', err);
+    console.error("Error creating table:", err);
   } else {
-    console.log('Table created successfully');
-    
+    console.log("Table created successfully");
+
     // Create indexes after table is created
     pool.execute(createIndex1, (err) => {
-      if (err && err.code !== 'ER_DUP_KEYNAME') {
-        console.error('Error creating index 1:', err);
+      if (err && err.code !== "ER_DUP_KEYNAME") {
+        console.error("Error creating index 1:", err);
       }
     });
-    
+
     pool.execute(createIndex2, (err) => {
-      if (err && err.code !== 'ER_DUP_KEYNAME') {
-        console.error('Error creating index 2:', err);
+      if (err && err.code !== "ER_DUP_KEYNAME") {
+        console.error("Error creating index 2:", err);
       }
     });
   }
