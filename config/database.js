@@ -49,17 +49,33 @@ const initializeDatabase = async () => {
     await pool.promise().execute(createTable);
     console.log("Table created successfully");
 
-    // Create indexes
-    const createIndex1 = `CREATE INDEX IF NOT EXISTS idx_created_at ON feedbacks(created_at)`;
-    const createIndex2 = `CREATE INDEX IF NOT EXISTS idx_color_theme ON feedbacks(color_theme)`;
+    // Create indexes with correct syntax
+    // MySQL doesn't support IF NOT EXISTS for indexes, so we need to check if they exist first
+    try {
+      // Try to create the first index
+      const createIndex1 = `CREATE INDEX idx_created_at ON feedbacks(created_at)`;
+      await pool.promise().execute(createIndex1);
+      console.log("Index 1 created successfully");
+    } catch (indexErr1) {
+      // Ignore duplicate key errors (1061 = duplicate key name)
+      if (indexErr1.errno === 1061) {
+        console.log("Index 1 already exists");
+      } else {
+        console.error("Error creating index 1:", indexErr1);
+      }
+    }
 
     try {
-      await pool.promise().execute(createIndex1);
+      // Try to create the second index
+      const createIndex2 = `CREATE INDEX idx_color_theme ON feedbacks(color_theme)`;
       await pool.promise().execute(createIndex2);
-    } catch (indexErr) {
+      console.log("Index 2 created successfully");
+    } catch (indexErr2) {
       // Ignore duplicate key errors
-      if (indexErr.code !== "ER_DUP_KEYNAME") {
-        console.error("Error creating indexes:", indexErr);
+      if (indexErr2.errno === 1061) {
+        console.log("Index 2 already exists");
+      } else {
+        console.error("Error creating index 2:", indexErr2);
       }
     }
   } catch (err) {
