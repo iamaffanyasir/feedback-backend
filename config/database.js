@@ -12,16 +12,16 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// Create database and tables
-const initializeDatabase = async () => {
-  try {
-    // Create a separate connection to handle database creation
-    const initConnection = mysql.createConnection({
-      host: process.env.DB_HOST || "127.0.0.1", // Use IPv4 instead of IPv6
-      user: process.env.DB_USER || "root",
-      password: process.env.DB_PASSWORD || "",
-    });
+// Simple test query to verify connection
+pool.query("SELECT 1", (err, results) => {
+  if (err) {
+    console.error("Database connection error:", err);
+  } else {
+    console.log("Database connected successfully");
+  }
+});
 
+module.exports = pool;
     // Create the database if it doesn't exist
     await initConnection
       .promise()
